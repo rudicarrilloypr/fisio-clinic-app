@@ -190,9 +190,12 @@ export default function Chatbot() {
 
                 <a
                   className="rounded-xl bg-black px-4 py-3 text-center text-white hover:opacity-90"
-                  href={`/appointment?branch=${encodeURIComponent(
-                    result.recommendedBranchId
-                  )}&zone=${encodeURIComponent(zone ?? "")}`}
+                href={`/appointment?branch=${encodeURIComponent(
+  result.recommendedBranchId
+)}&zone=${encodeURIComponent(zone ?? "")}${
+  result.recommendedServiceId ? `&service=${encodeURIComponent(result.recommendedServiceId)}` : ""
+}`}
+
                 >
                   📅 Agendar cita
                 </a>
