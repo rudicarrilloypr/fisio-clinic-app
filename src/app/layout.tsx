@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 import type { Metadata } from "next";
-import Image from "next/image";
 import "./globals.css";
+import Header from "@/components/layout/Header";
 
 export const metadata: Metadata = {
   title: "CEFIX | Centro Fisioterapéutico Xalapa",
@@ -15,43 +15,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className="min-h-dvh flex flex-col"
         style={{ background: "var(--cefix-bg)", color: "var(--cefix-blue)" }}
       >
-        <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-            <a href="/" className="flex items-center gap-3">
-              <div className="relative h-10 w-[140px]">
-                <Image
-                  src="/cefix-logo.png"
-                  alt="CEFIX"
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              </div>
-            </a>
+        <Header />
 
-            <nav className="hidden items-center gap-2 sm:flex">
-              <a className="rounded-xl px-3 py-2 text-sm hover:bg-zinc-100" href="/services">
-                Servicios
-              </a>
-              <a className="rounded-xl px-3 py-2 text-sm hover:bg-zinc-100" href="/videos">
-                Videos
-              </a>
-              <a className="rounded-xl px-3 py-2 text-sm hover:bg-zinc-100" href="/branches">
-                Sucursales
-              </a>
-
-              <a
-                className="rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95 active:opacity-90"
-                style={{ background: "var(--cefix-blue)" }}
-                href="/appointment"
-              >
-                Agendar
-              </a>
-            </nav>
-          </div>
-        </header>
-
-        {/* ✅ main grows to push footer to bottom on short pages */}
         <main className="flex-1">
           <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8">{children}</div>
         </main>
