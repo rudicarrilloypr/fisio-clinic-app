@@ -22,6 +22,24 @@ function pick(sp: SearchParams, key: string): string {
   return typeof v === "string" ? v : "";
 }
 
+function Field({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string | null;
+}) {
+  if (!value) return null;
+  return (
+    <div className="rounded-2xl border bg-white p-4">
+      <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        {label}
+      </div>
+      <div className="mt-1 text-sm font-medium text-zinc-900">{value}</div>
+    </div>
+  );
+}
+
 export default async function ConfirmPage({ searchParams }: Props) {
   const sp = (await searchParams) ?? {};
 
@@ -54,27 +72,69 @@ export default async function ConfirmPage({ searchParams }: Props) {
   const whatsappUrl = buildWhatsappLink(branch.whatsapp, text);
 
   return (
-    <div className="mx-auto max-w-2xl p-4">
-      <h1 className="text-2xl font-semibold">Confirmación</h1>
-      <p className="mt-1 text-sm text-gray-600">Revisa los datos y confirma por WhatsApp.</p>
+    <div className="mx-auto max-w-2xl">
+      {/* Header / Step */}
+      <div className="rounded-3xl border bg-white p-6 shadow-sm">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Confirmación</h1>
+            <p className="mt-1 text-sm text-zinc-600">
+              Revisa los datos. Al confirmar, abriremos WhatsApp con el mensaje listo para enviar.
+            </p>
+          </div>
 
-      <div className="mt-4 rounded-2xl border bg-white p-4 shadow-sm space-y-2">
-        <div className="text-sm text-gray-600">Resumen</div>
-        <div className="text-lg font-semibold">{branch.name}</div>
-        <div className="text-sm">{service.name}</div>
-        {zoneLabel ? <div className="text-sm">Zona: {zoneLabel}</div> : null}
-        <div className="text-sm">
-          {date} — {time}
+          <div className="hidden sm:flex items-center gap-2">
+            <span className="rounded-full border px-3 py-1 text-xs text-zinc-600">
+              1 Datos
+            </span>
+            <span className="rounded-full bg-black px-3 py-1 text-xs text-white">
+              2 Confirmación
+            </span>
+          </div>
         </div>
-        <div className="text-sm">
-          {name} — {phone}
-        </div>
-        {notes ? <div className="text-sm text-gray-700">Notas: {notes}</div> : null}
       </div>
 
+      {/* Summary */}
+      <div className="mt-6 rounded-3xl border bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Resumen
+          </div>
+          <div className="text-xs text-zinc-500">CEFIX</div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Field label="Sucursal" value={branch?.name} />
+          <Field label="Servicio" value={service?.name} />
+          <Field label="Fecha" value={date || ""} />
+          <Field label="Hora" value={time || ""} />
+          <Field label="Paciente" value={name || ""} />
+          <Field label="Teléfono" value={phone || ""} />
+        </div>
+
+        {zoneLabel ? (
+          <div className="mt-3 rounded-2xl border bg-zinc-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Zona
+            </div>
+            <div className="mt-1 text-sm font-medium text-zinc-900">{zoneLabel}</div>
+          </div>
+        ) : null}
+
+        {notes ? (
+          <div className="mt-3 rounded-2xl border bg-zinc-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Notas
+            </div>
+            <div className="mt-1 text-sm text-zinc-800 whitespace-pre-wrap">{notes}</div>
+          </div>
+        ) : null}
+      </div>
+
+      {/* Actions */}
       <div className="mt-4 grid gap-2">
         <a
-          className="rounded-xl bg-black px-4 py-3 text-center text-white hover:opacity-90"
+          className="rounded-2xl bg-black px-4 py-3 text-center text-white hover:opacity-90 active:opacity-80"
           href={whatsappUrl}
           target="_blank"
           rel="noreferrer"
@@ -82,17 +142,26 @@ export default async function ConfirmPage({ searchParams }: Props) {
           💬 Confirmar por WhatsApp
         </a>
 
-        <a className="rounded-xl border px-4 py-3 text-center hover:bg-gray-50" href="/appointment">
-          Editar información
-        </a>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <a
+            className="rounded-2xl border bg-white px-4 py-3 text-center hover:bg-zinc-50"
+            href="/appointment"
+          >
+            Editar información
+          </a>
 
-        <a className="rounded-xl border px-4 py-3 text-center hover:bg-gray-50" href="/">
-          Volver al inicio
-        </a>
+          <a
+            className="rounded-2xl border bg-white px-4 py-3 text-center hover:bg-zinc-50"
+            href="/"
+          >
+            Volver al inicio
+          </a>
+        </div>
       </div>
 
-      <div className="mt-4 rounded-xl border p-3">
-        <p className="text-xs text-gray-500">
+      {/* Note */}
+      <div className="mt-4 rounded-2xl border bg-white p-4">
+        <p className="text-xs text-zinc-500">
           Nota: En MVP el WhatsApp es placeholder. Luego conectamos números reales por sucursal.
         </p>
       </div>

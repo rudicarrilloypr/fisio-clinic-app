@@ -24,3 +24,22 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Simple “premium” feel */
+:root {
+  color-scheme: light;
+}
+
+a, button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  /* Brand tokens (match CEFIX logo vibe) */
+  --cefix-blue: #0b3a5a;    /* azul profundo (texto/headers) */
+  --cefix-blue-2: #1f5f84;  /* azul secundario (hover) */
+  --cefix-yellow: #f4b400;  /* acento amarillo */
+  --cefix-bg: #f6f9fc;      /* fondo clínico */
+  --cefix-card: #ffffff;    /* tarjetas */
+  --cefix-border: #e6eef5;  /* bordes suaves */
+}

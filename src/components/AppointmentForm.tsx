@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/exhaustive-deps */
- 
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -23,6 +22,13 @@ function todayISO() {
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 }
+
+const inputBase =
+  "mt-1 w-full rounded-2xl border bg-white px-3 py-2 outline-none " +
+  "focus:ring-2 focus:ring-black/10 focus:border-black/20";
+
+const labelBase = "text-sm font-medium text-zinc-900";
+const helperBase = "mt-1 text-xs text-zinc-500";
 
 export default function AppointmentForm(props: {
   initialBranchId: Branch["id"];
@@ -115,15 +121,16 @@ export default function AppointmentForm(props: {
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-2xl border bg-white p-4 shadow-sm space-y-4">
-      <div className="rounded-xl border p-3">
-        <p className="text-sm text-gray-600">Contexto</p>
-        <p className="mt-1 text-sm">
+    <form onSubmit={onSubmit} className="rounded-3xl border bg-white p-6 shadow-sm space-y-5">
+      {/* Context */}
+      <div className="rounded-2xl border bg-zinc-50 p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-600">Contexto</p>
+        <p className="mt-1 text-sm text-zinc-800">
           {props.initialZone ? (
             <>
               Zona seleccionada: <span className="font-medium">{zoneLabel}</span>
               {filteredServices.length !== services.length && filteredServices.length > 0 ? (
-                <span className="text-gray-500"> (servicios filtrados por zona)</span>
+                <span className="text-zinc-500"> (servicios filtrados por zona)</span>
               ) : null}
             </>
           ) : (
@@ -132,11 +139,12 @@ export default function AppointmentForm(props: {
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      {/* Branch + Service */}
+      <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="text-sm font-medium">Sucursal</label>
+          <label className={labelBase}>Sucursal</label>
           <select
-            className="mt-1 w-full rounded-xl border px-3 py-2"
+            className={inputBase}
             value={branchId}
             onChange={(e) => setBranchId(e.target.value as Branch["id"])}
           >
@@ -146,13 +154,13 @@ export default function AppointmentForm(props: {
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-gray-500">{selectedBranch?.hours}</p>
+          <p className={helperBase}>{selectedBranch?.hours ?? "Horario disponible al confirmar."}</p>
         </div>
 
         <div>
-          <label className="text-sm font-medium">Servicio</label>
+          <label className={labelBase}>Servicio</label>
           <select
-            className="mt-1 w-full rounded-xl border px-3 py-2"
+            className={inputBase}
             value={serviceId}
             onChange={(e) => setServiceId(e.target.value as Service["id"])}
           >
@@ -162,74 +170,95 @@ export default function AppointmentForm(props: {
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-gray-500">{selectedService?.description}</p>
+
+          <p className={helperBase}>{selectedService?.description ?? "Selecciona el tipo de atención."}</p>
 
           {services.length === 0 ? (
-            <p className="mt-1 text-xs text-red-600">
+            <p className="mt-2 text-xs text-red-600">
               No hay servicios cargados aún (placeholder). Revisa src/lib/content/services.ts
             </p>
           ) : null}
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      {/* Date + Time */}
+      <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="text-sm font-medium">Fecha preferida</label>
+          <label className={labelBase}>Fecha preferida</label>
           <input
             type="date"
-            className="mt-1 w-full rounded-xl border px-3 py-2"
+            className={inputBase}
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
+          <p className={helperBase}>Propones una fecha y el equipo confirma disponibilidad.</p>
         </div>
 
         <div>
-          <label className="text-sm font-medium">Hora preferida</label>
+          <label className={labelBase}>Hora preferida</label>
           <input
             type="time"
-            className="mt-1 w-full rounded-xl border px-3 py-2"
+            className={inputBase}
             value={time}
             onChange={(e) => setTime(e.target.value)}
           />
+          <p className={helperBase}>El horario final se confirma por WhatsApp.</p>
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      {/* Name + Phone */}
+      <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="text-sm font-medium">Nombre</label>
+          <label className={labelBase}>Nombre</label>
           <input
-            className="mt-1 w-full rounded-xl border px-3 py-2"
-            placeholder="Tu nombre"
+            className={inputBase}
+            placeholder="Ej. Rodolfo Carrillo"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            autoComplete="name"
           />
         </div>
 
         <div>
-          <label className="text-sm font-medium">Teléfono</label>
+          <label className={labelBase}>Teléfono</label>
           <input
-            className="mt-1 w-full rounded-xl border px-3 py-2"
-            placeholder="Tu teléfono"
+            className={inputBase}
+            placeholder="Ej. 22 99 12 34 56"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            inputMode="tel"
+            autoComplete="tel"
           />
+          <p className={helperBase}>Solo para confirmar tu cita (sin spam).</p>
         </div>
       </div>
 
+      {/* Notes */}
       <div>
-        <label className="text-sm font-medium">Notas (opcional)</label>
+        <label className={labelBase}>Notas (opcional)</label>
         <textarea
-          className="mt-1 w-full rounded-xl border px-3 py-2"
-          placeholder="Ej. dolor desde hace 3 días, hice deporte, etc."
-          rows={3}
+          className={inputBase}
+          placeholder="Ej. dolor desde hace 3 días, lesión deportiva, post-operatorio…"
+          rows={4}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
+        <p className={helperBase}>Cuéntanos lo esencial para preparar tu sesión.</p>
       </div>
 
-      <button type="submit" className="w-full rounded-xl bg-black px-4 py-3 text-white hover:opacity-90">
-        Continuar a confirmación
-      </button>
+      {/* Actions */}
+      <div className="grid gap-2">
+        <button
+          type="submit"
+          className="w-full rounded-2xl bg-black px-4 py-3 text-white hover:opacity-90 active:opacity-80"
+        >
+          Continuar a confirmación
+        </button>
+
+        <p className="text-xs text-zinc-500 text-center">
+          Al continuar, abriremos WhatsApp para confirmar tu cita con la sucursal.
+        </p>
+      </div>
     </form>
   );
 }
