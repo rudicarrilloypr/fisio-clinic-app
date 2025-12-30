@@ -10,10 +10,10 @@ import type { CityZone } from "@/lib/content/branches";
 type Step = "intent" | "urgency_level" | "city_zone" | "zone" | "result";
 
 const card =
-  "rounded-3xl border p-6 shadow-sm bg-white";
+  "rounded-3xl border shadow-sm bg-white p-4 sm:p-6";
 const softCard =
   "rounded-2xl border p-4 bg-zinc-50";
-const title = "text-xl font-semibold tracking-tight";
+const title = "text-xl sm:text-2xl font-semibold tracking-tight";
 const sub = "mt-1 text-sm text-zinc-600";
 
 const sectionLabel =
@@ -30,16 +30,20 @@ const optionBtnStrong =
   "focus:outline-none focus:ring-2 focus:ring-black/10";
 
 const pillNav =
-  "rounded-full border bg-white px-3 py-1 text-sm hover:bg-zinc-50";
+  "rounded-full border bg-white px-3 py-2 text-sm hover:bg-zinc-50";
 
 function StepPill({ active, children }: { active?: boolean; children: React.ReactNode }) {
   return (
     <span
       className={[
-        "rounded-full px-3 py-1 text-xs font-medium border",
+        "rounded-full px-2.5 py-1 text-[11px] font-medium border",
         active ? "text-white" : "text-zinc-600 bg-white",
       ].join(" ")}
-      style={active ? { background: "var(--cefix-blue)", borderColor: "var(--cefix-blue)" } : { borderColor: "var(--cefix-border)" }}
+      style={
+        active
+          ? { background: "var(--cefix-blue)", borderColor: "var(--cefix-blue)" }
+          : { borderColor: "var(--cefix-border)" }
+      }
     >
       {children}
     </span>
@@ -75,24 +79,54 @@ export default function Chatbot() {
     step === "city_zone" ? 3 :
     step === "zone" ? 4 : 5;
 
+  const canGoBack = step !== "intent";
+
+  function goBack() {
+    // UX simple y predecible (sin recalcular estados):
+    // Volvemos a la pantalla anterior sin borrar selecciones ya hechas.
+    if (step === "urgency_level") return setStep("intent");
+    if (step === "city_zone") {
+      // si venía por urgencia o por cita, regresamos a intent
+      return setStep(intent === "urgency" ? "urgency_level" : "intent");
+    }
+    if (step === "zone") return setStep("city_zone");
+    if (step === "result") return setStep("zone");
+  }
+
+  function resetAll() {
+    setStep("intent");
+    setIntent(null);
+    setUrgencyLevel(null);
+    setCityZone(null);
+    setZone(null);
+  }
+
   return (
     <div className="mx-auto max-w-xl">
-      <div
-        className={card}
-        style={{ borderColor: "var(--cefix-border)" }}
-      >
+      <div className={card} style={{ borderColor: "var(--cefix-border)" }}>
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <h1 className={title} style={{ color: "var(--cefix-blue)" }}>
               Orientación rápida
             </h1>
             <p className={sub}>
-              Responde unas preguntas para orientarte <span className="font-medium">(sin diagnóstico)</span>.
+              Responde unas preguntas para orientarte{" "}
+              <span className="font-medium">(sin diagnóstico)</span>.
             </p>
+
+            {/* Mobile step row */}
+            <div className="mt-3 flex flex-wrap gap-2 sm:hidden">
+              <StepPill active={stepIndex === 1}>1</StepPill>
+              <StepPill active={stepIndex === 2}>2</StepPill>
+              <StepPill active={stepIndex === 3}>3</StepPill>
+              <StepPill active={stepIndex === 4}>4</StepPill>
+              <StepPill active={stepIndex === 5}>5</StepPill>
+              <span className="ml-1 text-xs text-zinc-500">Paso {stepIndex} de 5</span>
+            </div>
           </div>
 
-          {/* Step pills */}
+          {/* Desktop step pills */}
           <div className="hidden sm:flex flex-wrap justify-end gap-2">
             <StepPill active={stepIndex === 1}>1 Inicio</StepPill>
             <StepPill active={stepIndex === 2}>2 Urgencia</StepPill>
@@ -102,8 +136,32 @@ export default function Chatbot() {
           </div>
         </div>
 
+        {/* Back button row */}
+        {canGoBack ? (
+          <div className="mt-4 flex items-center justify-between">
+            <button
+              className="rounded-xl border bg-white px-3 py-2 text-sm hover:bg-zinc-50"
+              style={{ borderColor: "var(--cefix-border)" }}
+              onClick={goBack}
+              type="button"
+            >
+              ← Atrás
+            </button>
+
+            <button
+              className="rounded-xl px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50"
+              onClick={resetAll}
+              type="button"
+            >
+              Reiniciar
+            </button>
+          </div>
+        ) : (
+          <div className="mt-4" />
+        )}
+
         {/* Divider */}
-        <div className="mt-5 h-px w-full" style={{ background: "var(--cefix-border)" }} />
+        <div className="mt-4 h-px w-full" style={{ background: "var(--cefix-border)" }} />
 
         <div className="mt-5 space-y-4">
           {step === "intent" && (
@@ -122,15 +180,16 @@ export default function Chatbot() {
                     setIntent("urgency");
                     setStep("urgency_level");
                   }}
+                  type="button"
                 >
                   <div className="flex items-start gap-3">
                     <span
-                      className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full"
+                      className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full"
                       style={{ background: "#fff1f2", color: "#b91c1c" }}
                     >
                       ●
                     </span>
-                    <div>
+                    <div className="min-w-0">
                       <div className="font-semibold">Tengo una urgencia</div>
                       <div className="mt-0.5 text-sm text-zinc-600">
                         Dolor intenso, accidente o limitación fuerte.
@@ -145,15 +204,16 @@ export default function Chatbot() {
                     setIntent("appointment");
                     setStep("city_zone");
                   }}
+                  type="button"
                 >
                   <div className="flex items-start gap-3">
                     <span
-                      className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full"
+                      className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full"
                       style={{ background: "#eef6ff", color: "var(--cefix-blue)" }}
                     >
                       📅
                     </span>
-                    <div>
+                    <div className="min-w-0">
                       <div className="font-semibold">Quiero agendar una cita</div>
                       <div className="mt-0.5 text-sm text-zinc-600">
                         Agendar valoración o tratamiento.
@@ -163,12 +223,12 @@ export default function Chatbot() {
                 </button>
               </div>
 
-              <div className="rounded-2xl border p-4" style={{ borderColor: "var(--cefix-border)", background: "#fbfdff" }}>
+              <div
+                className="rounded-2xl border p-4"
+                style={{ borderColor: "var(--cefix-border)", background: "#fbfdff" }}
+              >
                 <div className="flex items-center gap-2">
-                  <span
-                    className="inline-flex h-2 w-2 rounded-full"
-                    style={{ background: "var(--cefix-yellow)" }}
-                  />
+                  <span className="inline-flex h-2 w-2 rounded-full" style={{ background: "var(--cefix-yellow)" }} />
                   <p className="text-xs text-zinc-600">
                     Si presentas síntomas graves o empeoran rápidamente, acude a atención inmediata.
                   </p>
@@ -193,6 +253,7 @@ export default function Chatbot() {
                     setUrgencyLevel("high");
                     setStep("city_zone");
                   }}
+                  type="button"
                 >
                   <div className="font-semibold">Alta</div>
                   <div className="mt-0.5 text-sm text-zinc-600">
@@ -206,6 +267,7 @@ export default function Chatbot() {
                     setUrgencyLevel("medium");
                     setStep("city_zone");
                   }}
+                  type="button"
                 >
                   <div className="font-semibold">Media</div>
                   <div className="mt-0.5 text-sm text-zinc-600">
@@ -219,6 +281,7 @@ export default function Chatbot() {
                     setUrgencyLevel("low");
                     setStep("city_zone");
                   }}
+                  type="button"
                 >
                   <div className="font-semibold">Baja</div>
                   <div className="mt-0.5 text-sm text-zinc-600">
@@ -245,9 +308,12 @@ export default function Chatbot() {
                     setCityZone("near_museo");
                     setStep("zone");
                   }}
+                  type="button"
                 >
                   <div className="font-semibold">Cerca de Museo</div>
-                  <div className="mt-0.5 text-sm text-zinc-600">Sugerimos la sucursal más conveniente.</div>
+                  <div className="mt-0.5 text-sm text-zinc-600">
+                    Sugerimos la sucursal más conveniente.
+                  </div>
                 </button>
 
                 <button
@@ -256,9 +322,12 @@ export default function Chatbot() {
                     setCityZone("near_araucarias");
                     setStep("zone");
                   }}
+                  type="button"
                 >
                   <div className="font-semibold">Cerca de Araucarias</div>
-                  <div className="mt-0.5 text-sm text-zinc-600">Sugerimos la sucursal más conveniente.</div>
+                  <div className="mt-0.5 text-sm text-zinc-600">
+                    Sugerimos la sucursal más conveniente.
+                  </div>
                 </button>
 
                 <button
@@ -267,9 +336,12 @@ export default function Chatbot() {
                     setCityZone("unknown");
                     setStep("zone");
                   }}
+                  type="button"
                 >
                   <div className="font-semibold">No estoy seguro</div>
-                  <div className="mt-0.5 text-sm text-zinc-600">Te damos la mejor opción disponible.</div>
+                  <div className="mt-0.5 text-sm text-zinc-600">
+                    Te damos la mejor opción disponible.
+                  </div>
                 </button>
               </div>
             </>
@@ -302,6 +374,7 @@ export default function Chatbot() {
                       setZone(value);
                       setStep("result");
                     }}
+                    type="button"
                   >
                     <span className="font-semibold">{label}</span>
                   </button>
@@ -350,13 +423,8 @@ export default function Chatbot() {
 
                 <button
                   className={optionBtn}
-                  onClick={() => {
-                    setStep("intent");
-                    setIntent(null);
-                    setUrgencyLevel(null);
-                    setCityZone(null);
-                    setZone(null);
-                  }}
+                  onClick={resetAll}
+                  type="button"
                 >
                   Reiniciar
                 </button>
@@ -366,8 +434,8 @@ export default function Chatbot() {
         </div>
       </div>
 
-      {/* Secondary nav (optional; header already has links) */}
-      <nav className="mt-4 flex flex-wrap gap-2">
+      {/* ✅ Secondary nav only on mobile (desktop already has header nav) */}
+      <nav className="mt-4 flex flex-wrap gap-2 sm:hidden">
         <a className={pillNav} style={{ borderColor: "var(--cefix-border)" }} href="/services">
           Servicios
         </a>

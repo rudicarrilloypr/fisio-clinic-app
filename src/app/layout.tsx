@@ -12,7 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <body
-        className="min-h-screen"
+        className="min-h-dvh flex flex-col"
         style={{ background: "var(--cefix-bg)", color: "var(--cefix-blue)" }}
       >
         <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur">
@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </a>
 
               <a
-                className="rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm"
+                className="rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95 active:opacity-90"
                 style={{ background: "var(--cefix-blue)" }}
                 href="/appointment"
               >
@@ -51,7 +51,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
 
-        <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+        {/* ✅ main grows to push footer to bottom on short pages */}
+        <main className="flex-1">
+          <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8">{children}</div>
+        </main>
 
         <footer className="border-t bg-white">
           <div className="mx-auto max-w-6xl px-4 py-6 text-xs text-zinc-500">
