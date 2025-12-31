@@ -134,7 +134,7 @@ export default function AppointmentForm(props: {
               ) : null}
             </>
           ) : (
-            <>Sin zona seleccionada (ok para MVP).</>
+            <>Sin zona seleccionada</>
           )}
         </p>
       </div>
