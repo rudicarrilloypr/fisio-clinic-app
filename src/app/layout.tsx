@@ -11,10 +11,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body
-        className="min-h-dvh flex flex-col"
-        style={{ background: "var(--cefix-bg)", color: "var(--cefix-blue)" }}
-      >
+<body
+  suppressHydrationWarning
+  className="min-h-dvh flex flex-col"
+  style={{ background: "var(--cefix-bg)", color: "var(--cefix-blue)" }}
+>
+
         <Header />
 
         <main className="flex-1">
