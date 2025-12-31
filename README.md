@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<p align="center">
+  <img src="./public/cefix-logo.png" alt="CEFIX Logo" width="260" />
+</p>
 
-## Getting Started
+<h2 align="center">CEFIX · Web App Clínica</h2>
 
-First, run the development server:
+<p align="center">
+  Aplicación web para orientación, agendado de citas y recomendación de sucursal
+  para un centro de fisioterapia con dos sedes.
+</p>
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🏥 Descripción
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**CEFIX Web App** es una aplicación clínica diseñada para mejorar la experiencia de pacientes
+al momento de:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Orientarse entre **urgencia** o **cita programada**
+- Recibir recomendaciones de **sucursal** según zona y contexto
+- Agendar citas sin necesidad de login (MVP)
+- Confirmar atención vía **WhatsApp**
+- Consultar **servicios**, **videos terapéuticos** y **sucursales**
 
-## Learn More
+La app prioriza una estética **profesional, clínica y confiable**, con un chatbot conversacional
+que guía al usuario paso a paso (sin realizar diagnósticos).
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ✨ Features (MVP)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- 🤖 Chatbot conversacional con animaciones suaves
+- 🏥 Derivación inteligente por sucursal (Museo / Araucarias)
+- 📅 Agendado de cita sin registro
+- 💬 Confirmación vía WhatsApp
+- 📱 Diseño responsive (mobile-first)
+- 🎨 UI alineada a identidad visual de CEFIX
+- ⚠️ Sin diagnósticos médicos (orientación únicamente)
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛠️ Stack Técnico
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Next.js (App Router)**
+- **React**
+- **TypeScript**
+- **Tailwind CSS**
+- **SSR / Streaming**
+- Arquitectura sin base de datos (MVP escalable)
+
+---
+
+## 🚀 Roadmap (próximo)
+
+- Integración con **Google Calendar** para disponibilidad real
+- Historial de conversación persistente
+- Panel interno para staff
+- Recordatorios automáticos
+- Sistema completo de citas (fase 2)
+
+---
+
+## 👨‍💻 Autor
+
+Desarrollado por **Rodolfo “Rudi” Carrillo**  
+Full Stack Developer · Product Builder
+
+- 🌐 Portafolio: https://rudicarrillo.com  
+- 💼 LinkedIn: https://www.linkedin.com/in/rudi-carrillo  
+
+---
+
+## ⚠️ Aviso
+
+Esta aplicación **no realiza diagnósticos médicos**.  
+Ante dolor intenso, lesiones recientes o emergencias, se recomienda acudir a atención inmediata.
+
+---
+
+<p align="center">
+  © CEFIX · Centro Fisioterapéutico
+</p>
