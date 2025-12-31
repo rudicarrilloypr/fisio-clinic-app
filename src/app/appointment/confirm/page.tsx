@@ -143,12 +143,22 @@ export default async function ConfirmPage({ searchParams }: Props) {
         </a>
 
         <div className="grid gap-2 sm:grid-cols-2">
-          <a
-            className="rounded-2xl border bg-white px-4 py-3 text-center hover:bg-zinc-50"
-            href="/appointment"
-          >
-            Editar información
-          </a>
+ <a
+  className="rounded-2xl border bg-white px-4 py-3 text-center hover:bg-zinc-50"
+  href={`/appointment?${new URLSearchParams({
+    branch: branchId,
+    service: serviceId,
+    date,
+    time,
+    name,
+    phone,
+    ...(zone ? { zone } : {}),
+    ...(notes ? { notes } : {}),
+  }).toString()}`}
+>
+  Editar información
+</a>
+
 
           <a
             className="rounded-2xl border bg-white px-4 py-3 text-center hover:bg-zinc-50"

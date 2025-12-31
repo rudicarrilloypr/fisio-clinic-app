@@ -1,19 +1,48 @@
 import { BRANCHES } from "@/lib/content/branches";
 import { SERVICES } from "@/lib/content/services";
 import AppointmentForm from "@/components/AppointmentForm";
+import type { BodyZone } from "@/lib/content/services";
 
 type Props = {
   searchParams?: Record<string, string | string[] | undefined>;
 };
 
-export default function AppointmentPage({ searchParams }: Props) {
-  const branchParam = typeof searchParams?.branch === "string" ? searchParams?.branch : undefined;
-  const zoneParam = typeof searchParams?.zone === "string" ? searchParams?.zone : undefined;
+// ✅ Type guard para BodyZone
+function isBodyZone(value: string): value is BodyZone {
+  return [
+    "neck",
+    "shoulder",
+    "back",
+    "low_back",
+    "knee",
+    "ankle",
+  ].includes(value);
+}
 
-  const branchExists = branchParam && BRANCHES.some((b) => b.id === branchParam);
-  const initialBranchId = (branchExists ? branchParam : BRANCHES[0]?.id) as
-    | "cefix_museo"
-    | "cefix_araucarias";
+export default function AppointmentPage({ searchParams }: Props) {
+  const branchParam =
+    typeof searchParams?.branch === "string"
+      ? searchParams.branch
+      : undefined;
+
+  const zoneParamRaw =
+    typeof searchParams?.zone === "string"
+      ? searchParams.zone
+      : undefined;
+
+  // ✅ solo asignamos si es BodyZone válido
+  const zoneParam: BodyZone | undefined =
+    zoneParamRaw && isBodyZone(zoneParamRaw)
+      ? zoneParamRaw
+      : undefined;
+
+  const branchExists =
+    branchParam && BRANCHES.some((b) => b.id === branchParam);
+
+  const initialBranchId =
+    (branchExists ? branchParam : BRANCHES[0]?.id) as
+      | "cefix_museo"
+      | "cefix_araucarias";
 
   return (
     <div className="mx-auto max-w-2xl p-4">
