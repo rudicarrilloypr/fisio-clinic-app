@@ -13,7 +13,6 @@ const links = [
 export default function Header() {
   const [open, setOpen] = useState(false);
 
-  // Cierra el menú con ESC
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
@@ -22,7 +21,6 @@ export default function Header() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  // Evita scroll del body cuando el menú está abierto (móvil)
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -34,10 +32,25 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b bg-white/85 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        {/* Logo con más protagonismo */}
-        <a href="/" className="flex items-center gap-3">
-          <div className="relative h-12 w-[170px] sm:h-12 sm:w-[190px]">
+      <div className="relative mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        {/* Mobile hamburger (LEFT) */}
+        <button
+          type="button"
+          className="inline-flex items-center justify-center rounded-xl border bg-white px-3 py-2 text-sm hover:bg-zinc-50 sm:hidden"
+          style={{ borderColor: "var(--cefix-border)" }}
+          aria-label={open ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open ? "✕" : "☰"}
+        </button>
+
+        {/* Logo CENTERED on mobile, normal on desktop */}
+        <a
+          href="/"
+          className="absolute left-1/2 -translate-x-1/2 sm:static sm:translate-x-0 flex items-center gap-3"
+        >
+          <div className="relative h-12 w-[180px] sm:h-14 sm:w-[220px]">
             <Image
               src="/cefix-logo.png"
               alt="CEFIX"
@@ -47,21 +60,16 @@ export default function Header() {
             />
           </div>
 
-          {/* Tagline (solo desktop) */}
-          <div className="hidden sm:block leading-tight">
-            <div className="text-sm font-semibold" style={{ color: "var(--cefix-blue)" }}>
-              Centro Fisioterapéutico Xalapa
-            </div>
-            <div className="text-xs text-zinc-500">
-              Atención profesional • Citas y urgencias
-            </div>
-          </div>
-        </a>
+        </a> 
 
-        {/* Desktop nav */}
+        {/* Desktop nav (RIGHT) */}
         <nav className="hidden items-center gap-2 sm:flex">
           {links.map((l) => (
-            <a key={l.href} className="rounded-xl px-3 py-2 text-sm hover:bg-zinc-100" href={l.href}>
+            <a
+              key={l.href}
+              className="rounded-xl px-3 py-2 text-sm hover:bg-zinc-100"
+              href={l.href}
+            >
               {l.label}
             </a>
           ))}
@@ -74,32 +82,21 @@ export default function Header() {
           </a>
         </nav>
 
-        {/* Mobile hamburger */}
-        <button
-          type="button"
-          className="inline-flex items-center justify-center rounded-xl border bg-white px-3 py-2 text-sm hover:bg-zinc-50 sm:hidden"
-          style={{ borderColor: "var(--cefix-border)" }}
-          aria-label={open ? "Cerrar menú" : "Abrir menú"}
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? "✕" : "☰"}
-        </button>
+        {/* Spacer to balance layout on mobile */}
+        <div className="w-[44px] sm:hidden" />
       </div>
 
       {/* Mobile drawer */}
-      {open ? (
+      {open && (
         <div className="sm:hidden">
-          {/* overlay */}
           <button
             aria-label="Cerrar menú"
             className="fixed inset-0 z-40 bg-black/30"
             onClick={() => setOpen(false)}
           />
 
-          {/* panel */}
           <div
-            className="fixed right-0 top-0 z-50 h-dvh w-[85%] max-w-sm border-l bg-white p-4 shadow-xl"
+            className="fixed left-0 top-0 z-50 h-dvh w-[85%] max-w-sm border-r bg-white p-4 shadow-xl"
             style={{ borderColor: "var(--cefix-border)" }}
           >
             <div className="flex items-center justify-between">
@@ -121,16 +118,7 @@ export default function Header() {
               </button>
             </div>
 
-            <div className="mt-4 rounded-2xl border bg-zinc-50 p-3" style={{ borderColor: "var(--cefix-border)" }}>
-              <div className="text-sm font-semibold" style={{ color: "var(--cefix-blue)" }}>
-                Centro Fisioterapéutico Xalapa
-              </div>
-              <div className="mt-1 text-xs text-zinc-600">
-                Agenda cita o recibe orientación rápida.
-              </div>
-            </div>
-
-            <nav className="mt-4 grid gap-2">
+            <nav className="mt-6 grid gap-2">
               {links.map((l) => (
                 <a
                   key={l.href}
@@ -144,26 +132,17 @@ export default function Header() {
               ))}
 
               <a
-                className="rounded-2xl px-4 py-3 text-sm font-semibold text-white hover:opacity-95 active:opacity-90"
+                className="rounded-2xl px-4 py-3 text-sm font-semibold text-white hover:opacity-95"
                 style={{ background: "var(--cefix-blue)" }}
                 href="/appointment"
                 onClick={() => setOpen(false)}
               >
-                📅 Agendar
-              </a>
-
-              <a
-                className="rounded-2xl border bg-white px-4 py-3 text-sm hover:bg-zinc-50"
-                style={{ borderColor: "var(--cefix-border)" }}
-                href="/"
-                onClick={() => setOpen(false)}
-              >
-                🏠 Inicio
+                📅 Agendar cita
               </a>
             </nav>
           </div>
         </div>
-      ) : null}
+      )}
     </header>
   );
 }
