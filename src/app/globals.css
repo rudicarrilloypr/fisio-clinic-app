@@ -58,3 +58,17 @@ a, button {
 .animate-fade-in {
   animation: fade-in 0.4s ease-out both;
 }
+
+@keyframes cefix-pop {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cefix-pop { animation: cefix-pop 220ms ease-out both; }
+
+@keyframes cefix-dots {
+  0%, 100% { opacity: .25; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-2px); }
+}
+.cefix-dot { animation: cefix-dots 900ms ease-in-out infinite; }
+.cefix-dot:nth-child(2) { animation-delay: 150ms; }
+.cefix-dot:nth-child(3) { animation-delay: 300ms; }

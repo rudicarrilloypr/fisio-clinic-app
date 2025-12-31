@@ -1,54 +1,32 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { BRANCHES } from "@/lib/content/branches";
 import { routePatient } from "@/lib/triage/rules";
 import type { Intent, UrgencyLevel } from "@/lib/triage/types";
 import type { BodyZone } from "@/lib/content/services";
-import { BRANCHES } from "@/lib/content/branches";
 import type { CityZone } from "@/lib/content/branches";
 
-type Step = "intent" | "urgency_level" | "city_zone" | "zone" | "result";
+type Step = "intent" | "urgency" | "city" | "body" | "result";
 
-const card =
-  "rounded-3xl border shadow-sm bg-white p-4 sm:p-6";
-const softCard =
-  "rounded-2xl border p-4 bg-zinc-50";
-const title = "text-xl sm:text-2xl font-semibold tracking-tight";
-const sub = "mt-1 text-sm text-zinc-600";
+type Msg =
+  | { id: string; role: "bot"; text: string }
+  | { id: string; role: "user"; text: string }
+  | { id: string; role: "bot"; kind: "options"; title?: string; options: { label: string; onPick: () => void }[] }
+  | { id: string; role: "bot"; kind: "card"; title: string; lines: string[]; ctas: { label: string; href?: string; onClick?: () => void; primary?: boolean }[] };
 
-const sectionLabel =
-  "text-xs font-semibold uppercase tracking-wide text-zinc-500";
-
-const optionBtn =
-  "w-full rounded-2xl border bg-white px-4 py-3 text-left " +
-  "hover:bg-zinc-50 active:bg-zinc-100 transition-colors " +
-  "focus:outline-none focus:ring-2 focus:ring-black/10";
-
-const optionBtnStrong =
-  "w-full rounded-2xl px-4 py-3 text-left text-white " +
-  "hover:opacity-95 active:opacity-90 transition-opacity " +
-  "focus:outline-none focus:ring-2 focus:ring-black/10";
-
-const pillNav =
-  "rounded-full border bg-white px-3 py-2 text-sm hover:bg-zinc-50";
-
-function StepPill({ active, children }: { active?: boolean; children: React.ReactNode }) {
-  return (
-    <span
-      className={[
-        "rounded-full px-2.5 py-1 text-[11px] font-medium border",
-        active ? "text-white" : "text-zinc-600 bg-white",
-      ].join(" ")}
-      style={
-        active
-          ? { background: "var(--cefix-blue)", borderColor: "var(--cefix-blue)" }
-          : { borderColor: "var(--cefix-border)" }
-      }
-    >
-      {children}
-    </span>
-  );
+function uid() {
+  return Math.random().toString(16).slice(2);
 }
+
+const ZONE_LABELS: Record<string, string> = {
+  neck: "Cuello",
+  shoulder: "Hombro",
+  back: "Espalda",
+  low_back: "Espalda baja",
+  knee: "Rodilla",
+  ankle: "Tobillo",
+};
 
 export default function Chatbot() {
   const [step, setStep] = useState<Step>("intent");
@@ -56,41 +34,45 @@ export default function Chatbot() {
   const [intent, setIntent] = useState<Intent | null>(null);
   const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel | null>(null);
   const [cityZone, setCityZone] = useState<CityZone | null>(null);
-  const [zone, setZone] = useState<BodyZone | null>(null);
+  const [bodyZone, setBodyZone] = useState<BodyZone | null>(null);
+
+  const [messages, setMessages] = useState<Msg[]>([]);
+  const [typing, setTyping] = useState(false);
+
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   const result = useMemo(() => {
     if (!intent) return null;
-
     return routePatient({
       intent,
       urgencyLevel: urgencyLevel ?? undefined,
       cityZone: cityZone ?? undefined,
-      zone: zone ?? undefined,
+      zone: bodyZone ?? undefined,
     });
-  }, [intent, urgencyLevel, cityZone, zone]);
+  }, [intent, urgencyLevel, cityZone, bodyZone]);
 
   const recommendedBranch = result
-    ? BRANCHES.find((b) => b.id === result.recommendedBranchId)
+    ? BRANCHES.find((b) => b.id === result.recommendedBranchId) ?? null
     : null;
 
-  const stepIndex =
-    step === "intent" ? 1 :
-    step === "urgency_level" ? 2 :
-    step === "city_zone" ? 3 :
-    step === "zone" ? 4 : 5;
+  // Autoscroll
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [messages, typing]);
 
-  const canGoBack = step !== "intent";
+  function botSay(text: string) {
+    setMessages((m) => [...m, { id: uid(), role: "bot", text }]);
+  }
 
-  function goBack() {
-    // UX simple y predecible (sin recalcular estados):
-    // Volvemos a la pantalla anterior sin borrar selecciones ya hechas.
-    if (step === "urgency_level") return setStep("intent");
-    if (step === "city_zone") {
-      // si venía por urgencia o por cita, regresamos a intent
-      return setStep(intent === "urgency" ? "urgency_level" : "intent");
-    }
-    if (step === "zone") return setStep("city_zone");
-    if (step === "result") return setStep("zone");
+  function userSay(text: string) {
+    setMessages((m) => [...m, { id: uid(), role: "user", text }]);
+  }
+
+  function showTyping(ms = 350) {
+    setTyping(true);
+    window.setTimeout(() => setTyping(false), ms);
   }
 
   function resetAll() {
@@ -98,354 +80,353 @@ export default function Chatbot() {
     setIntent(null);
     setUrgencyLevel(null);
     setCityZone(null);
-    setZone(null);
+    setBodyZone(null);
+    setMessages([]);
+    setTyping(false);
+    // re-seed
+    seed();
   }
 
+  function seed() {
+    setMessages([
+      { id: uid(), role: "bot", text: "Hola 👋 Soy el asistente de CEFIX. Te hago unas preguntas rápidas para orientarte (sin diagnóstico)." },
+      {
+        id: uid(),
+        role: "bot",
+        kind: "options",
+        title: "¿Qué necesitas hoy?",
+        options: [
+          {
+            label: "Tengo una urgencia ⚠️",
+            onPick: () => {
+              userSay("Tengo una urgencia");
+              setIntent("urgency");
+              showTyping();
+              setStep("urgency");
+            },
+          },
+          {
+            label: "Quiero agendar una cita 📅",
+            onPick: () => {
+              userSay("Quiero agendar una cita");
+              setIntent("appointment");
+              showTyping();
+              setStep("city");
+            },
+          },
+        ],
+      },
+    ]);
+  }
+
+  // init once
+  useEffect(() => {
+    seed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Step prompts (when step changes)
+  useEffect(() => {
+    if (typing) return;
+
+    if (step === "urgency") {
+      setMessages((m) => [
+        ...m,
+        {
+          id: uid(),
+          role: "bot",
+          kind: "options",
+          title: "¿Qué tan urgente se siente?",
+          options: [
+            {
+              label: "Alta (dolor intenso / accidente / limitación fuerte)",
+              onPick: () => {
+                userSay("Urgencia alta");
+                setUrgencyLevel("high");
+                showTyping();
+                setStep("city");
+              },
+            },
+            {
+              label: "Media",
+              onPick: () => {
+                userSay("Urgencia media");
+                setUrgencyLevel("medium");
+                showTyping();
+                setStep("city");
+              },
+            },
+            {
+              label: "Baja",
+              onPick: () => {
+                userSay("Urgencia baja");
+                setUrgencyLevel("low");
+                showTyping();
+                setStep("city");
+              },
+            },
+          ],
+        },
+      ]);
+    }
+
+    if (step === "city") {
+      setMessages((m) => [
+        ...m,
+        {
+          id: uid(),
+          role: "bot",
+          kind: "options",
+          title: "¿Qué zona de la ciudad te queda más cerca?",
+          options: [
+            {
+              label: "Cerca de Museo",
+              onPick: () => {
+                userSay("Cerca de Museo");
+                setCityZone("near_museo");
+                showTyping();
+                setStep("body");
+              },
+            },
+            {
+              label: "Cerca de Araucarias",
+              onPick: () => {
+                userSay("Cerca de Araucarias");
+                setCityZone("near_araucarias");
+                showTyping();
+                setStep("body");
+              },
+            },
+            {
+              label: "No estoy seguro",
+              onPick: () => {
+                userSay("No estoy seguro");
+                setCityZone("unknown");
+                showTyping();
+                setStep("body");
+              },
+            },
+          ],
+        },
+      ]);
+    }
+
+    if (step === "body") {
+      setMessages((m) => [
+        ...m,
+        {
+          id: uid(),
+          role: "bot",
+          kind: "options",
+          title: "¿Qué zona del cuerpo quieres tratar?",
+          options: ([
+            ["neck", "Cuello"],
+            ["shoulder", "Hombro"],
+            ["back", "Espalda"],
+            ["low_back", "Espalda baja"],
+            ["knee", "Rodilla"],
+            ["ankle", "Tobillo"],
+          ] as const).map(([v, label]) => ({
+            label,
+            onPick: () => {
+              userSay(label);
+              setBodyZone(v);
+              showTyping();
+              setStep("result");
+            },
+          })),
+        },
+      ]);
+    }
+
+    if (step === "result" && result && recommendedBranch) {
+      const zoneText = bodyZone ? (ZONE_LABELS[bodyZone] ?? String(bodyZone)) : "";
+
+      setMessages((m) => [
+        ...m,
+        { id: uid(), role: "bot", text: "Listo. Con base en lo que me dijiste, esta es la mejor recomendación:" },
+        {
+          id: uid(),
+          role: "bot",
+          kind: "card",
+          title: recommendedBranch.name,
+          lines: [
+            recommendedBranch.address,
+            recommendedBranch.hours,
+            zoneText ? `Zona del cuerpo: ${zoneText}` : "",
+            result.disclaimer,
+          ].filter(Boolean),
+          ctas: [
+            { label: "📍 Ver ubicación", href: recommendedBranch.mapsUrl },
+            {
+              label: "📅 Agendar cita",
+              href: `/appointment?branch=${encodeURIComponent(recommendedBranch.id)}${
+                bodyZone ? `&zone=${encodeURIComponent(bodyZone)}` : ""
+              }${result.recommendedServiceId ? `&service=${encodeURIComponent(result.recommendedServiceId)}` : ""}`,
+              primary: true,
+            },
+            { label: "Reiniciar", onClick: resetAll },
+          ],
+        },
+      ]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, typing]);
+
   return (
-    <div className="mx-auto max-w-xl">
-      <div className={card} style={{ borderColor: "var(--cefix-border)" }}>
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className={title} style={{ color: "var(--cefix-blue)" }}>
-              Orientación rápida
-            </h1>
-            <p className={sub}>
-              Responde unas preguntas para orientarte{" "}
-              <span className="font-medium">(sin diagnóstico)</span>.
-            </p>
+<div
+  className="mx-auto w-full max-w-none md:max-w-xl lg:max-w-lg rounded-3xl border bg-white shadow-sm"
+  style={{ borderColor: "var(--cefix-border)" }}
+>
 
-            {/* Mobile step row */}
-            <div className="mt-3 flex flex-wrap gap-2 sm:hidden">
-              <StepPill active={stepIndex === 1}>1</StepPill>
-              <StepPill active={stepIndex === 2}>2</StepPill>
-              <StepPill active={stepIndex === 3}>3</StepPill>
-              <StepPill active={stepIndex === 4}>4</StepPill>
-              <StepPill active={stepIndex === 5}>5</StepPill>
-              <span className="ml-1 text-xs text-zinc-500">Paso {stepIndex} de 5</span>
-            </div>
+      {/* Header mini */}
+      <div className="flex items-center justify-between px-4 py-3 sm:px-5">
+        <div className="min-w-0">
+          <div className="text-sm font-semibold" style={{ color: "var(--cefix-blue)" }}>
+            Asistente CEFIX
           </div>
-
-          {/* Desktop step pills */}
-          <div className="hidden sm:flex flex-wrap justify-end gap-2">
-            <StepPill active={stepIndex === 1}>1 Inicio</StepPill>
-            <StepPill active={stepIndex === 2}>2 Urgencia</StepPill>
-            <StepPill active={stepIndex === 3}>3 Zona ciudad</StepPill>
-            <StepPill active={stepIndex === 4}>4 Cuerpo</StepPill>
-            <StepPill active={stepIndex === 5}>5 Resultado</StepPill>
-          </div>
+          <div className="text-xs text-zinc-500">Orientación rápida (sin diagnóstico)</div>
         </div>
 
-        {/* Back button row */}
-        {canGoBack ? (
-          <div className="mt-4 flex items-center justify-between">
-            <button
-              className="rounded-xl border bg-white px-3 py-2 text-sm hover:bg-zinc-50"
-              style={{ borderColor: "var(--cefix-border)" }}
-              onClick={goBack}
-              type="button"
-            >
-              ← Atrás
-            </button>
+        <button
+          type="button"
+          className="rounded-xl border bg-white px-3 py-2 text-xs hover:bg-zinc-50"
+          style={{ borderColor: "var(--cefix-border)" }}
+          onClick={resetAll}
+        >
+          Reiniciar
+        </button>
+      </div>
 
-            <button
-              className="rounded-xl px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50"
-              onClick={resetAll}
-              type="button"
-            >
-              Reiniciar
-            </button>
-          </div>
-        ) : (
-          <div className="mt-4" />
-        )}
+      <div className="h-px w-full" style={{ background: "var(--cefix-border)" }} />
 
-        {/* Divider */}
-        <div className="mt-4 h-px w-full" style={{ background: "var(--cefix-border)" }} />
-
-        <div className="mt-5 space-y-4">
-          {step === "intent" && (
-            <>
-              <div>
-                <div className={sectionLabel}>Paso 1</div>
-                <p className="mt-1 text-base font-semibold" style={{ color: "var(--cefix-blue)" }}>
-                  ¿Qué necesitas hoy?
-                </p>
-              </div>
-
-              <div className="grid gap-3">
-                <button
-                  className={optionBtn}
-                  onClick={() => {
-                    setIntent("urgency");
-                    setStep("urgency_level");
-                  }}
-                  type="button"
-                >
-                  <div className="flex items-start gap-3">
-                    <span
-                      className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full"
-                      style={{ background: "#fff1f2", color: "#b91c1c" }}
-                    >
-                      ●
-                    </span>
-                    <div className="min-w-0">
-                      <div className="font-semibold">Tengo una urgencia</div>
-                      <div className="mt-0.5 text-sm text-zinc-600">
-                        Dolor intenso, accidente o limitación fuerte.
-                      </div>
+      {/* Messages */}
+      <div ref={listRef} className="max-h-[64vh] overflow-auto px-4 py-4 sm:px-5">
+        <div className="grid gap-3">
+          {messages.map((msg) => {
+            if (msg.role === "bot" && "kind" in msg && msg.kind === "options") {
+              return (
+                <div key={msg.id} className="cefix-pop">
+                  {msg.title ? (
+                    <div className="mb-2 text-sm font-semibold" style={{ color: "var(--cefix-blue)" }}>
+                      {msg.title}
                     </div>
-                  </div>
-                </button>
+                  ) : null}
 
-                <button
-                  className={optionBtn}
-                  onClick={() => {
-                    setIntent("appointment");
-                    setStep("city_zone");
-                  }}
-                  type="button"
+                  <div className="grid gap-2">
+                    {msg.options.map((o, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        className="rounded-2xl border bg-white px-4 py-3 text-left text-sm hover:bg-zinc-50 active:bg-zinc-100 transition-colors"
+                        style={{ borderColor: "var(--cefix-border)" }}
+                        onClick={o.onPick}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
+            if (msg.role === "bot" && "kind" in msg && msg.kind === "card") {
+              return (
+                <div key={msg.id} className="cefix-pop rounded-3xl border bg-zinc-50 p-4" style={{ borderColor: "var(--cefix-border)" }}>
+                  <div className="text-sm font-semibold" style={{ color: "var(--cefix-blue)" }}>
+                    {msg.title}
+                  </div>
+                  <div className="mt-2 grid gap-1 text-sm text-zinc-700">
+                    {msg.lines.map((l, i) => (
+                      <div key={i}>{l}</div>
+                    ))}
+                  </div>
+
+                  <div className="mt-3 grid gap-2">
+                    {msg.ctas.map((c, i) => {
+                      if (c.href) {
+                        return (
+                          <a
+                            key={i}
+                            href={c.href}
+                            target={c.href.startsWith("http") ? "_blank" : undefined}
+                            rel={c.href.startsWith("http") ? "noreferrer" : undefined}
+                            className={[
+                              "rounded-2xl px-4 py-3 text-sm font-medium text-center transition-opacity",
+                              c.primary ? "text-white" : "border bg-white hover:bg-zinc-50",
+                            ].join(" ")}
+                            style={
+                              c.primary
+                                ? { background: "var(--cefix-blue)" }
+                                : { borderColor: "var(--cefix-border)" }
+                            }
+                          >
+                            {c.label}
+                          </a>
+                        );
+                      }
+
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          className="rounded-2xl border bg-white px-4 py-3 text-sm hover:bg-zinc-50"
+                          style={{ borderColor: "var(--cefix-border)" }}
+                          onClick={c.onClick}
+                        >
+                          {c.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            }
+
+            // Plain bubble
+            const isUser = msg.role === "user";
+            return (
+              <div key={msg.id} className={`cefix-pop flex ${isUser ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={[
+                    "max-w-[85%] rounded-3xl px-4 py-3 text-sm",
+                    isUser ? "text-white" : "border bg-white text-zinc-800",
+                  ].join(" ")}
+                  style={
+                    isUser
+                      ? { background: "var(--cefix-blue)" }
+                      : { borderColor: "var(--cefix-border)" }
+                  }
                 >
-                  <div className="flex items-start gap-3">
-                    <span
-                      className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full"
-                      style={{ background: "#eef6ff", color: "var(--cefix-blue)" }}
-                    >
-                      📅
-                    </span>
-                    <div className="min-w-0">
-                      <div className="font-semibold">Quiero agendar una cita</div>
-                      <div className="mt-0.5 text-sm text-zinc-600">
-                        Agendar valoración o tratamiento.
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              </div>
-
-              <div
-                className="rounded-2xl border p-4"
-                style={{ borderColor: "var(--cefix-border)", background: "#fbfdff" }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-2 w-2 rounded-full" style={{ background: "var(--cefix-yellow)" }} />
-                  <p className="text-xs text-zinc-600">
-                    Si presentas síntomas graves o empeoran rápidamente, acude a atención inmediata.
-                  </p>
+                  {"text" in msg ? msg.text : ""}
                 </div>
               </div>
-            </>
-          )}
+            );
+          })}
 
-          {step === "urgency_level" && (
-            <>
-              <div>
-                <div className={sectionLabel}>Paso 2</div>
-                <p className="mt-1 text-base font-semibold" style={{ color: "var(--cefix-blue)" }}>
-                  ¿Qué tan urgente se siente?
-                </p>
-              </div>
-
-              <div className="grid gap-3">
-                <button
-                  className={optionBtn}
-                  onClick={() => {
-                    setUrgencyLevel("high");
-                    setStep("city_zone");
-                  }}
-                  type="button"
-                >
-                  <div className="font-semibold">Alta</div>
-                  <div className="mt-0.5 text-sm text-zinc-600">
-                    Dolor intenso / accidente / no puedo mover bien
-                  </div>
-                </button>
-
-                <button
-                  className={optionBtn}
-                  onClick={() => {
-                    setUrgencyLevel("medium");
-                    setStep("city_zone");
-                  }}
-                  type="button"
-                >
-                  <div className="font-semibold">Media</div>
-                  <div className="mt-0.5 text-sm text-zinc-600">
-                    Molestia moderada / limita un poco
-                  </div>
-                </button>
-
-                <button
-                  className={optionBtn}
-                  onClick={() => {
-                    setUrgencyLevel("low");
-                    setStep("city_zone");
-                  }}
-                  type="button"
-                >
-                  <div className="font-semibold">Baja</div>
-                  <div className="mt-0.5 text-sm text-zinc-600">
-                    Leve / prevención / molestia ligera
-                  </div>
-                </button>
-              </div>
-            </>
-          )}
-
-          {step === "city_zone" && (
-            <>
-              <div>
-                <div className={sectionLabel}>Paso 3</div>
-                <p className="mt-1 text-base font-semibold" style={{ color: "var(--cefix-blue)" }}>
-                  ¿Qué zona te queda más cerca?
-                </p>
-              </div>
-
-              <div className="grid gap-3">
-                <button
-                  className={optionBtn}
-                  onClick={() => {
-                    setCityZone("near_museo");
-                    setStep("zone");
-                  }}
-                  type="button"
-                >
-                  <div className="font-semibold">Cerca de Museo</div>
-                  <div className="mt-0.5 text-sm text-zinc-600">
-                    Sugerimos la sucursal más conveniente.
-                  </div>
-                </button>
-
-                <button
-                  className={optionBtn}
-                  onClick={() => {
-                    setCityZone("near_araucarias");
-                    setStep("zone");
-                  }}
-                  type="button"
-                >
-                  <div className="font-semibold">Cerca de Araucarias</div>
-                  <div className="mt-0.5 text-sm text-zinc-600">
-                    Sugerimos la sucursal más conveniente.
-                  </div>
-                </button>
-
-                <button
-                  className={optionBtn}
-                  onClick={() => {
-                    setCityZone("unknown");
-                    setStep("zone");
-                  }}
-                  type="button"
-                >
-                  <div className="font-semibold">No estoy seguro</div>
-                  <div className="mt-0.5 text-sm text-zinc-600">
-                    Te damos la mejor opción disponible.
-                  </div>
-                </button>
-              </div>
-            </>
-          )}
-
-          {step === "zone" && (
-            <>
-              <div>
-                <div className={sectionLabel}>Paso 4</div>
-                <p className="mt-1 text-base font-semibold" style={{ color: "var(--cefix-blue)" }}>
-                  ¿Qué zona del cuerpo quieres tratar?
-                </p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                {(
-                  [
-                    ["neck", "Cuello"],
-                    ["shoulder", "Hombro"],
-                    ["back", "Espalda"],
-                    ["low_back", "Espalda baja"],
-                    ["knee", "Rodilla"],
-                    ["ankle", "Tobillo"],
-                  ] as const
-                ).map(([value, label]) => (
-                  <button
-                    key={value}
-                    className={optionBtn}
-                    onClick={() => {
-                      setZone(value);
-                      setStep("result");
-                    }}
-                    type="button"
-                  >
-                    <span className="font-semibold">{label}</span>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-
-          {step === "result" && result && recommendedBranch && (
-            <>
+          {/* Typing indicator */}
+          {typing ? (
+            <div className="cefix-pop flex justify-start">
               <div
-                className={softCard}
-                style={{ borderColor: "var(--cefix-border)", background: "#fbfdff" }}
+                className="rounded-3xl border bg-white px-4 py-3"
+                style={{ borderColor: "var(--cefix-border)" }}
               >
-                <div className={sectionLabel}>Recomendación</div>
-                <p className="mt-1 text-lg font-semibold" style={{ color: "var(--cefix-blue)" }}>
-                  {recommendedBranch.name}
-                </p>
-                <p className="mt-1 text-sm text-zinc-700">{recommendedBranch.address}</p>
-                <p className="mt-2 text-xs text-zinc-500">{result.disclaimer}</p>
+                <div className="flex items-center gap-1">
+                  <span className="cefix-dot inline-block h-2 w-2 rounded-full bg-zinc-400" />
+                  <span className="cefix-dot inline-block h-2 w-2 rounded-full bg-zinc-400" />
+                  <span className="cefix-dot inline-block h-2 w-2 rounded-full bg-zinc-400" />
+                </div>
               </div>
-
-              <div className="grid gap-2">
-                <a
-                  className={optionBtn}
-                  href={recommendedBranch.mapsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  📍 Ver ubicación
-                </a>
-
-                <a
-                  className={optionBtnStrong}
-                  style={{ background: "var(--cefix-blue)" }}
-                  href={`/appointment?branch=${encodeURIComponent(
-                    result.recommendedBranchId
-                  )}&zone=${encodeURIComponent(zone ?? "")}${
-                    result.recommendedServiceId
-                      ? `&service=${encodeURIComponent(result.recommendedServiceId)}`
-                      : ""
-                  }`}
-                >
-                  📅 Agendar cita
-                </a>
-
-                <button
-                  className={optionBtn}
-                  onClick={resetAll}
-                  type="button"
-                >
-                  Reiniciar
-                </button>
-              </div>
-            </>
-          )}
+            </div>
+          ) : null}
         </div>
       </div>
 
-      {/* ✅ Secondary nav only on mobile (desktop already has header nav) */}
-      <nav className="mt-4 flex flex-wrap gap-2 sm:hidden">
-        <a className={pillNav} style={{ borderColor: "var(--cefix-border)" }} href="/services">
-          Servicios
-        </a>
-        <a className={pillNav} style={{ borderColor: "var(--cefix-border)" }} href="/videos">
-          Videos
-        </a>
-        <a className={pillNav} style={{ borderColor: "var(--cefix-border)" }} href="/branches">
-          Sucursales
-        </a>
-      </nav>
+      {/* Footer hint */}
+      <div className="h-px w-full" style={{ background: "var(--cefix-border)" }} />
+      <div className="px-4 py-3 text-[11px] text-zinc-500 sm:px-5">
+        Consejo: si el dolor es intenso o hay lesión reciente, busca atención inmediata.
+      </div>
     </div>
   );
 }

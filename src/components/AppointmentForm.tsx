@@ -212,7 +212,7 @@ export default function AppointmentForm(props: {
           <label className={labelBase}>Nombre</label>
           <input
             className={inputBase}
-            placeholder="Ej. Rodolfo Carrillo"
+            placeholder="Ej. Roberto Martinez"
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoComplete="name"
@@ -223,7 +223,7 @@ export default function AppointmentForm(props: {
           <label className={labelBase}>Teléfono</label>
           <input
             className={inputBase}
-            placeholder="Ej. 22 99 12 34 56"
+            placeholder="Ej. 22 89 12 34 56"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             inputMode="tel"
