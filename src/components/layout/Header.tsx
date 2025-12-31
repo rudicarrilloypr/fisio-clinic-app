@@ -31,6 +31,13 @@ export default function Header() {
     };
   }, [open]);
 
+  const overlayBase =
+    "fixed inset-0 z-40 bg-black/30 transition-opacity duration-200 ease-out";
+
+  const panelBase =
+    "fixed left-0 top-0 z-50 h-dvh w-[85%] max-w-sm border-r bg-white shadow-xl " +
+    "transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform";
+
   return (
     <header className="sticky top-0 z-50 border-b bg-white/85 backdrop-blur">
       <div className="relative mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
@@ -60,8 +67,7 @@ export default function Header() {
               priority
             />
           </div>
-
-        </a> 
+        </a>
 
         {/* Desktop nav (RIGHT) */}
         <nav className="hidden items-center gap-2 sm:flex">
@@ -88,73 +94,94 @@ export default function Header() {
       </div>
 
       {/* Mobile drawer */}
-      {open && (
-        <div className="sm:hidden">
-          <button
-            aria-label="Cerrar menú"
-            className="fixed inset-0 z-40 bg-black/30"
-            onClick={() => setOpen(false)}
-          />
+      <div className="sm:hidden">
+        {/* Overlay (fade) */}
+        <div
+          role="button"
+          tabIndex={open ? 0 : -1}
+          aria-label="Cerrar menú"
+          className={`${overlayBase} ${
+            open ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+          onClick={() => setOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") setOpen(false);
+          }}
+        />
 
-          <div
-            className="fixed left-0 top-0 z-50 h-dvh w-[85%] max-w-sm border-r bg-white p-4 shadow-xl"
-            style={{ borderColor: "var(--cefix-border)" }}
-          >
-{/* Drawer header / Branding */}
-<div className="relative">
-  <button
-    aria-label="Cerrar menú"
-    className="absolute right-0 top-0 rounded-xl border bg-white px-3 py-2 text-sm hover:bg-zinc-50"
-    style={{ borderColor: "var(--cefix-border)" }}
-    onClick={() => setOpen(false)}
-  >
-    ✕
-  </button>
+        {/* Panel (slide) */}
+        <div
+          className={`${panelBase} ${
+            open ? "translate-x-0" : "-translate-x-full pointer-events-none"
+          }`}
+          style={{ borderColor: "var(--cefix-border)" }}
+        >
+          {/* Drawer header / Branding (logo grande + separador) */}
+          <div className="relative">
+            <button
+              aria-label="Cerrar menú"
+              className="absolute right-4 top-4 rounded-xl border bg-white px-3 py-2 text-sm hover:bg-zinc-50 transition-colors"
+              style={{ borderColor: "var(--cefix-border)" }}
+              onClick={() => setOpen(false)}
+            >
+              ✕
+            </button>
 
-  <div className="flex justify-center pt-6 pb-4">
-    <div className="relative h-16 w-[220px]">
-      <Image
-        src="/cefix-logo.png"
-        alt="CEFIX"
-        fill
-        className="object-contain"
-        priority
-      />
-    </div>
-  </div>
+            <div className="flex justify-center pt-8 pb-5">
+              <div className="relative h-16 w-[220px]">
+                <Image
+                  src="/cefix-logo.png"
+                  alt="CEFIX"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+            </div>
 
-  <div
-    className="mx-auto mb-4 h-px w-4/5"
-    style={{ background: "var(--cefix-border)" }}
-  />
-</div>
+            <div
+              className="mx-auto mb-4 h-px w-4/5"
+              style={{ background: "var(--cefix-border)" }}
+            />
+          </div>
 
-
-            <nav className="mt-6 grid gap-2">
-              {links.map((l) => (
-                <a
-                  key={l.href}
-                  className="rounded-2xl border bg-white px-4 py-3 text-sm hover:bg-zinc-50"
-                  style={{ borderColor: "var(--cefix-border)" }}
-                  href={l.href}
-                  onClick={() => setOpen(false)}
-                >
-                  {l.label}
-                </a>
-              ))}
-
+          {/* Nav with subtle stagger */}
+          <nav className="mt-2 grid gap-2 px-4">
+            {links.map((l, i) => (
               <a
-                className="rounded-2xl px-4 py-3 text-sm font-semibold text-white hover:opacity-95"
-                style={{ background: "var(--cefix-blue)" }}
-                href="/appointment"
+                key={l.href}
+                className="rounded-2xl border bg-white px-4 py-3 text-sm hover:bg-zinc-50 transition-all"
+                style={{
+                  borderColor: "var(--cefix-border)",
+                  transitionDelay: open ? `${60 + i * 35}ms` : "0ms",
+                  transform: open ? "translateY(0px)" : "translateY(6px)",
+                  opacity: open ? 1 : 0,
+                }}
+                href={l.href}
                 onClick={() => setOpen(false)}
               >
-                📅 Agendar cita
+                {l.label}
               </a>
-            </nav>
-          </div>
+            ))}
+
+            <a
+              className="rounded-2xl px-4 py-3 text-sm font-semibold text-white hover:opacity-95 active:opacity-90 transition-all"
+              style={{
+                background: "var(--cefix-blue)",
+                transitionDelay: open ? `${60 + links.length * 35}ms` : "0ms",
+                transform: open ? "translateY(0px)" : "translateY(6px)",
+                opacity: open ? 1 : 0,
+              }}
+              href="/appointment"
+              onClick={() => setOpen(false)}
+            >
+              📅 Agendar cita
+            </a>
+          </nav>
+
+          <div className="h-10" />
         </div>
-      )}
+      </div>
     </header>
   );
 }
