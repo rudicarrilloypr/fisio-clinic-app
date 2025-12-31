@@ -100,24 +100,35 @@ export default function Header() {
             className="fixed left-0 top-0 z-50 h-dvh w-[85%] max-w-sm border-r bg-white p-4 shadow-xl"
             style={{ borderColor: "var(--cefix-border)" }}
           >
-            <div className="flex items-center justify-between">
-              <div className="relative h-10 w-[160px]">
-                <Image
-                  src="/cefix-logo.png"
-                  alt="CEFIX"
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              </div>
-              <button
-                className="rounded-xl border bg-white px-3 py-2 text-sm hover:bg-zinc-50"
-                style={{ borderColor: "var(--cefix-border)" }}
-                onClick={() => setOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
+{/* Drawer header / Branding */}
+<div className="relative">
+  <button
+    aria-label="Cerrar menú"
+    className="absolute right-0 top-0 rounded-xl border bg-white px-3 py-2 text-sm hover:bg-zinc-50"
+    style={{ borderColor: "var(--cefix-border)" }}
+    onClick={() => setOpen(false)}
+  >
+    ✕
+  </button>
+
+  <div className="flex justify-center pt-6 pb-4">
+    <div className="relative h-16 w-[220px]">
+      <Image
+        src="/cefix-logo.png"
+        alt="CEFIX"
+        fill
+        className="object-contain"
+        priority
+      />
+    </div>
+  </div>
+
+  <div
+    className="mx-auto mb-4 h-px w-4/5"
+    style={{ background: "var(--cefix-border)" }}
+  />
+</div>
+
 
             <nav className="mt-6 grid gap-2">
               {links.map((l) => (
